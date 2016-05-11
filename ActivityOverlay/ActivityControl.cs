@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Media;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,6 +27,7 @@ namespace ActivityOverlay
 
         private readonly ObservableCollection<Activity> _activities = new ObservableCollection<Activity>();
         private ContentPresenter _activityPresenter;
+        private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public Activity CurrentActivity
         {
@@ -111,6 +113,16 @@ namespace ActivityOverlay
                 e.CanExecute = this.CurrentActivity != null;
             }));
 
+            this.CommandBindings.Add(new CommandBinding(ActivityCommands.CancelCommand, (s, e) =>
+            {
+                if (_cancellationTokenSource != null)
+                {
+                    _cancellationTokenSource.Cancel();
+                }
+            }, (s, e) =>
+            {
+                e.CanExecute = this.CurrentActivity != null && this.CurrentActivity.Cancellable;
+            }));
         }
 
         public override void OnApplyTemplate()
@@ -120,7 +132,8 @@ namespace ActivityOverlay
             _activityPresenter = Template.FindName("PART_Activity", this) as ContentPresenter;
         }
 
-        public Activity EnqueueActivity(Func<Task> action, string name = null, string message = null, bool showErrors = true, bool showSuccess = false, bool restartable = true)
+        public Activity EnqueueActivity(Func<CancellationToken, Task> action, string name = null, string message = null, bool showErrors = true, bool showSuccess = false, 
+            bool restartable = true, bool cancellable = false)
         {
             var activity = new Activity
             {
@@ -129,7 +142,8 @@ namespace ActivityOverlay
                 Action = action,
                 ShowSuccess = showSuccess,
                 ShowErrors = showErrors,
-                Restartable = restartable
+                Restartable = restartable,
+                Cancellable = cancellable
             };
 
             EnqueueActivity(activity);
@@ -169,7 +183,8 @@ namespace ActivityOverlay
 
                 try
                 {
-                    await activity.Action();
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    await activity.Action(_cancellationTokenSource.Token);
                     activity.Status = ActivityStatus.Finished;
 
                     if (_activityPresenter != null)

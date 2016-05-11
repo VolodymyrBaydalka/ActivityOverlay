@@ -28,17 +28,17 @@ namespace ActivitySample
 
         private void Button_Click1(object sender, RoutedEventArgs e)
         {
-            Activity.EnqueueActivity(async () => {
-                await Task.Delay(1000);
+            Activity.EnqueueActivity(async (t) => {
+                await Task.Delay(3000, t);
                 this.Title = "AAAAAAAAAAAAA";
                 throw new Exception("AAAAAAAAAAAAAAAAAAAAAAAAA");
-            }, "Sleep", "Sleeping...", true, true, false);
+            }, "Sleep", "Sleeping...", true, true, false, true);
         }
 
         private void Button_Click2(object sender, RoutedEventArgs e)
         {
-            Activity.EnqueueActivity(async () => {
-                await Task.Delay(1000);
+            Activity.EnqueueActivity(async (t) => {
+                await Task.Delay(3000, t);
                 this.Title = "AAAAAAAAAAAAA";
             }, "Sleep", "Sleeping...", true, true );
         }

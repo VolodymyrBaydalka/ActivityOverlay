@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -17,6 +18,7 @@ namespace ActivityOverlay
         public static readonly DependencyProperty ShowErrorsProperty = DependencyProperty.Register("ShowErrors", typeof(bool), typeof(Activity), new PropertyMetadata(true));
         public static readonly DependencyProperty ShowSuccessProperty = DependencyProperty.Register("ShowSuccess", typeof(bool), typeof(Activity), new PropertyMetadata(true));
         public static readonly DependencyProperty RestartableProperty = DependencyProperty.Register("Restartable", typeof(bool), typeof(Activity), new PropertyMetadata(true));
+        public static readonly DependencyProperty CancellableProperty = DependencyProperty.Register("Cancellable", typeof(bool), typeof(Activity), new PropertyMetadata(false));
 
         public string Name
         {
@@ -61,14 +63,21 @@ namespace ActivityOverlay
             set { SetValue(RestartableProperty, value); }
         }
 
+        public bool Cancellable
+        {
+            get { return (bool)GetValue(CancellableProperty); }
+            set { SetValue(CancellableProperty, value); }
+        }
+
+
         public Activity() {
         }
 
-        public Activity(Func<Task> action)
+        public Activity(Func<CancellationToken, Task> action)
         {
             this.Action = action;
         }
 
-        internal Func<Task> Action { get; set; }
+        internal Func<CancellationToken, Task> Action { get; set; }
     }
 }

@@ -56,6 +56,10 @@
     <DataTemplate x:Key="ActivityLoadingTemplate" DataType="{x:Type local:Activity}">
         <Border HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="{StaticResource ActivityBackground}">
             <DockPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Button x:Name="CancelButton" DockPanel.Dock="Right" HorizontalAlignment="Center"
+                        Style="{StaticResource ActivityButton}" Command="{x:Static local:ActivityCommands.CancelCommand}">
+                    <fa:ImageAwesome Width="40" Height="40" Foreground="Red" Icon="TimesCircleOutline" ToolTip="Cancel"/>
+                </Button>
                 <Image DockPanel.Dock="Left" Margin="0, 0, 10, 0" Source="{StaticResource LoadingIcon}" Width="32" Height="32" RenderTransformOrigin="0.5,0.5">
                     <Image.RenderTransform>
                         <RotateTransform/>
@@ -73,6 +77,11 @@
                 </TextBlock>
             </DockPanel>
         </Border>
+        <DataTemplate.Triggers>
+            <DataTrigger Binding="{Binding Cancellable}" Value="False">
+                <Setter Property="Visibility" Value="Collapsed" TargetName="CancelButton"/>
+            </DataTrigger>
+        </DataTemplate.Triggers>
     </DataTemplate>
 
     <DataTemplate x:Key="ActivityErrorTemplate" DataType="{x:Type local:Activity}">

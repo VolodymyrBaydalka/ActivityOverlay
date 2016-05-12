@@ -6,6 +6,8 @@ This control provides basic UI to display background activity:
   * cancel button (hidden by default)
   * UI to display information about exception and "retry" button
   * UI to display that task is done (hidden by default)
+  
+![alt tag](https://cloud.githubusercontent.com/assets/1528799/15213430/ce7e2890-184f-11e6-9eb4-aab606a4a75b.gif)
 
 # How to use
   Step 1) Add namespace xmlns:a="clr-namespace:ActivityOverlay;assembly=ActivityOverlay" to XAML

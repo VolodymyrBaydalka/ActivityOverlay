@@ -136,7 +136,7 @@
                     <fa:ImageAwesome Width="40" Height="40" Foreground="Green" Icon="CheckCircleOutline"/>
                 </Button>
 
-                <TextBlock DockPanel.Dock="Top" Margin="15, 20, 15, 10" Foreground="Green" FontWeight="Bold" FontSize="24" Text="An error occurred..."/>
+                <TextBlock DockPanel.Dock="Top" Margin="15, 20, 15, 10" Foreground="Green" FontWeight="Bold" FontSize="24" Text="Done."/>
                 <TextBlock DockPanel.Dock="Top" Margin="20, 0" Foreground="Green" Text="{Binding Path=Name, Mode=OneWay, StringFormat={}Task {0} is finished}"/>
             </DockPanel>
         </Grid>

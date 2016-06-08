@@ -42,6 +42,7 @@ namespace ActivityOverlay
         public static readonly RoutedEvent FinishedEvent = EventManager.RegisterRoutedEvent("Finished", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
         public static readonly RoutedEvent SucceedEvent = EventManager.RegisterRoutedEvent("Succeed", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
         public static readonly RoutedEvent ErrorEvent = EventManager.RegisterRoutedEvent("Error", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
+        public static readonly RoutedEvent ContinueEvent = EventManager.RegisterRoutedEvent("Continue", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
 
         private readonly ObservableCollection<Activity> _activities = new ObservableCollection<Activity>();
         private ContentPresenter _activityPresenter;
@@ -97,6 +98,12 @@ namespace ActivityOverlay
             remove { RemoveHandler(FinishedEvent, value); }
         }
 
+        public event RoutedEventHandler Continue
+        {
+            add { AddHandler(ContinueEvent, value); }
+            remove { RemoveHandler(ContinueEvent, value); }
+        }
+
         static ActivityControl()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(ActivityControl), new FrameworkPropertyMetadata(typeof(ActivityControl)));
@@ -122,6 +129,8 @@ namespace ActivityOverlay
             {
                 if (this.CurrentActivity != null)
                 {
+                    RaiseEvent(new RoutedEventArgs(ContinueEvent));
+
                     _activities.Remove(this.CurrentActivity);
                     this.CurrentActivity = null;
                     CheckAndRun();

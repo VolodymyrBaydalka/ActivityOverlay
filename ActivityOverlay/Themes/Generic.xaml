@@ -103,7 +103,10 @@
 
                 <TextBlock DockPanel.Dock="Top" Margin="15, 20, 15, 10" Foreground="Red" FontWeight="Bold" FontSize="24" Text="An error occurred..."/>
 
-                <Expander Margin="20, 0" Header="{Binding Path=Error.Message, Mode=OneWay}" TextElement.Foreground="Red">
+                <Expander Margin="20, 0" TextElement.Foreground="Red">
+                    <Expander.Header>
+                        <TextBlock TextWrapping="Wrap" Text="{Binding Path=Error.Message, Mode=OneWay}"/>
+                    </Expander.Header>
                     <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" VerticalAlignment="Stretch" HorizontalAlignment="Stretch">
                         <TextBlock Text="{Binding Path=Error.StackTrace, Mode=OneWay}" TextWrapping="Wrap"/>
                     </ScrollViewer>

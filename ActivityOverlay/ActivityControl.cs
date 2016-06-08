@@ -38,11 +38,11 @@ namespace ActivityOverlay
         public static readonly DependencyProperty SuccessTemplateProperty = DependencyProperty.Register("SuccessTemplate", typeof(DataTemplate), typeof(ActivityControl), new PropertyMetadata(null));
         public static readonly DependencyProperty ErrorTemplateProperty = DependencyProperty.Register("ErrorTemplate", typeof(DataTemplate), typeof(ActivityControl), new PropertyMetadata(null));
 
-        public static readonly RoutedEvent StartedEvent = EventManager.RegisterRoutedEvent("Started", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
-        public static readonly RoutedEvent FinishedEvent = EventManager.RegisterRoutedEvent("Finished", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
-        public static readonly RoutedEvent SucceedEvent = EventManager.RegisterRoutedEvent("Succeed", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
-        public static readonly RoutedEvent ErrorEvent = EventManager.RegisterRoutedEvent("Error", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
-        public static readonly RoutedEvent ContinueEvent = EventManager.RegisterRoutedEvent("Continue", RoutingStrategy.Bubble, typeof(RoutedEventHandler), typeof(ActivityControl));
+        public static readonly RoutedEvent StartedEvent = EventManager.RegisterRoutedEvent("Started", RoutingStrategy.Bubble, typeof(RoutedActivityEventHandler), typeof(ActivityControl));
+        public static readonly RoutedEvent FinishedEvent = EventManager.RegisterRoutedEvent("Finished", RoutingStrategy.Bubble, typeof(RoutedActivityEventHandler), typeof(ActivityControl));
+        public static readonly RoutedEvent SucceedEvent = EventManager.RegisterRoutedEvent("Succeed", RoutingStrategy.Bubble, typeof(RoutedActivityEventHandler), typeof(ActivityControl));
+        public static readonly RoutedEvent ErrorEvent = EventManager.RegisterRoutedEvent("Error", RoutingStrategy.Bubble, typeof(RoutedActivityEventHandler), typeof(ActivityControl));
+        public static readonly RoutedEvent ContinueEvent = EventManager.RegisterRoutedEvent("Continue", RoutingStrategy.Bubble, typeof(RoutedActivityEventHandler), typeof(ActivityControl));
 
         private readonly ObservableCollection<Activity> _activities = new ObservableCollection<Activity>();
         private ContentPresenter _activityPresenter;
@@ -74,31 +74,31 @@ namespace ActivityOverlay
 
         public ReadOnlyObservableCollection<Activity> Activities { get; private set; }
 
-        public event RoutedEventHandler Started
+        public event RoutedActivityEventHandler Started
         {
             add { AddHandler(StartedEvent, value); }
             remove { RemoveHandler(StartedEvent, value); }
         }
 
-        public event RoutedEventHandler Error
+        public event RoutedActivityEventHandler Error
         {
             add { AddHandler(ErrorEvent, value); }
             remove { RemoveHandler(ErrorEvent, value); }
         }
 
-        public event RoutedEventHandler Succeed
+        public event RoutedActivityEventHandler Succeed
         {
             add { AddHandler(SucceedEvent, value); }
             remove { RemoveHandler(SucceedEvent, value); }
         }
 
-        public event RoutedEventHandler Finished
+        public event RoutedActivityEventHandler Finished
         {
             add { AddHandler(FinishedEvent, value); }
             remove { RemoveHandler(FinishedEvent, value); }
         }
 
-        public event RoutedEventHandler Continue
+        public event RoutedActivityEventHandler Continue
         {
             add { AddHandler(ContinueEvent, value); }
             remove { RemoveHandler(ContinueEvent, value); }
@@ -129,7 +129,7 @@ namespace ActivityOverlay
             {
                 if (this.CurrentActivity != null)
                 {
-                    RaiseEvent(new RoutedEventArgs(ContinueEvent));
+                    RaiseEvent(new RoutedActivityEventArgs(ContinueEvent, this.CurrentActivity));
 
                     _activities.Remove(this.CurrentActivity);
                     this.CurrentActivity = null;
@@ -201,7 +201,7 @@ namespace ActivityOverlay
             {
                 this.CurrentActivity = activity;
 
-                RaiseEvent(new RoutedEventArgs(StartedEvent));
+                RaiseEvent(new RoutedActivityEventArgs(StartedEvent, activity));
 
                 activity.Status = ActivityStatus.Running;
 
@@ -217,7 +217,7 @@ namespace ActivityOverlay
                     if (_activityPresenter != null)
                         _activityPresenter.ContentTemplate = SuccessTemplate;
 
-                    RaiseEvent(new RoutedEventArgs(SucceedEvent));
+                    RaiseEvent(new RoutedActivityEventArgs(SucceedEvent, activity));
 
                     if (!activity.ShowSuccess)
                     {
@@ -232,7 +232,7 @@ namespace ActivityOverlay
                     if (_activityPresenter != null)
                         _activityPresenter.ContentTemplate = ErrorTemplate;
 
-                    RaiseEvent(new RoutedEventArgs(ErrorEvent));
+                    RaiseEvent(new RoutedActivityEventArgs(ErrorEvent, activity));
 
                     if (!activity.ShowErrors)
                     {
@@ -240,7 +240,7 @@ namespace ActivityOverlay
                     }
                 }
 
-                RaiseEvent(new RoutedEventArgs(FinishedEvent));
+                RaiseEvent(new RoutedActivityEventArgs(FinishedEvent, activity));
 
                 this.Dispatcher.Invoke(CheckAndRun);
             }

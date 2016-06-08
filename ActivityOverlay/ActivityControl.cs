@@ -33,7 +33,9 @@ namespace ActivityOverlay
     [TemplatePart(Name = "PART_Activity", Type = typeof(ContentPresenter))]
     public class ActivityControl : ContentControl
     {
-        public static readonly DependencyProperty CurrentActivityProperty = DependencyProperty.Register("CurrentActivity", typeof(Activity), typeof(ActivityControl), new PropertyMetadata(null));
+        private static readonly DependencyPropertyKey CurrentActivityPropertyKey = DependencyProperty.RegisterReadOnly("CurrentActivity", typeof(Activity), typeof(ActivityControl), new PropertyMetadata(null));
+        public static readonly DependencyProperty CurrentActivityProperty = CurrentActivityPropertyKey.DependencyProperty;
+
         public static readonly DependencyProperty LoadingTemplateProperty = DependencyProperty.Register("LoadingTemplate", typeof(DataTemplate), typeof(ActivityControl), new PropertyMetadata(null));
         public static readonly DependencyProperty SuccessTemplateProperty = DependencyProperty.Register("SuccessTemplate", typeof(DataTemplate), typeof(ActivityControl), new PropertyMetadata(null));
         public static readonly DependencyProperty ErrorTemplateProperty = DependencyProperty.Register("ErrorTemplate", typeof(DataTemplate), typeof(ActivityControl), new PropertyMetadata(null));
@@ -51,7 +53,7 @@ namespace ActivityOverlay
         public Activity CurrentActivity
         {
             get { return (Activity)GetValue(CurrentActivityProperty); }
-            set { SetValue(CurrentActivityProperty, value); }
+            private set { SetValue(CurrentActivityPropertyKey, value); }
         }
 
         public DataTemplate LoadingTemplate
@@ -157,9 +159,10 @@ namespace ActivityOverlay
             base.OnApplyTemplate();
 
             _activityPresenter = Template.FindName("PART_Activity", this) as ContentPresenter;
+            UpdateActivityPresenter(CurrentActivity);
         }
 
-        public Activity EnqueueActivity(Func<CancellationToken, Task> action, string name = null, string message = null, bool showErrors = true, bool showSuccess = false, 
+        public Activity EnqueueActivity(Func<CancellationToken, Task> action, string name = null, string message = null, bool showErrors = true, bool showSuccess = false,
             bool restartable = true, bool cancellable = false)
         {
             var activity = new Activity
@@ -184,29 +187,60 @@ namespace ActivityOverlay
             CheckAndRun();
         }
 
+        private void UpdateActivityPresenter(Activity activity)
+        {
+            if (_activityPresenter == null)
+                return;
+
+            if (activity == null)
+            {
+                _activityPresenter.Visibility = Visibility.Collapsed;
+                _activityPresenter.Content = null;
+            }
+            else
+            {
+                _activityPresenter.Visibility = Visibility.Visible;
+                _activityPresenter.Content = activity;
+
+                switch (activity.Status)
+                {
+                    case ActivityStatus.NotStarted:
+                        break;
+
+                    case ActivityStatus.Running:
+                        _activityPresenter.ContentTemplate = LoadingTemplate;
+                        break;
+
+                    case ActivityStatus.Finished:
+                        _activityPresenter.ContentTemplate = SuccessTemplate;
+                        break;
+
+                    case ActivityStatus.Failed:
+                        _activityPresenter.ContentTemplate = ErrorTemplate;
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates UI and starts pending activityies if no one runs
+        /// </summary>
         private async void CheckAndRun()
         {
-            var activity = _activities.FirstOrDefault();
+            var activity = _activities.FirstOrDefault(); // if empty it returns null and hide presenter
 
             if (this.CurrentActivity != activity)
                 this.CurrentActivity = activity;
 
-            if (_activityPresenter != null)
+            if (activity == null || activity.Status != ActivityStatus.NotStarted)
             {
-                _activityPresenter.Visibility = activity == null ? Visibility.Collapsed : Visibility.Visible;
-                _activityPresenter.Content = activity;
+                UpdateActivityPresenter(activity);
             }
-
-            if (activity != null && activity.Status == ActivityStatus.NotStarted)
+            else if (activity.Status == ActivityStatus.NotStarted)
             {
-                this.CurrentActivity = activity;
-
-                RaiseEvent(new RoutedActivityEventArgs(StartedEvent, activity));
-
                 activity.Status = ActivityStatus.Running;
-
-                if (_activityPresenter != null)
-                    _activityPresenter.ContentTemplate = LoadingTemplate;
+                RaiseEvent(new RoutedActivityEventArgs(StartedEvent, activity));
+                UpdateActivityPresenter(activity);
 
                 try
                 {
@@ -214,35 +248,33 @@ namespace ActivityOverlay
                     await activity.Action(_cancellationTokenSource.Token);
                     activity.Status = ActivityStatus.Finished;
 
-                    if (_activityPresenter != null)
-                        _activityPresenter.ContentTemplate = SuccessTemplate;
-
                     RaiseEvent(new RoutedActivityEventArgs(SucceedEvent, activity));
 
-                    if (!activity.ShowSuccess)
+                    if (!activity.ShowSuccess) //remove from queue and go next
                     {
                         _activities.Remove(activity);
                     }
+
+                    UpdateActivityPresenter(activity.ShowSuccess ? activity : null);
                 }
                 catch (Exception e)
                 {
                     activity.Error = e;
                     activity.Status = ActivityStatus.Failed;
 
-                    if (_activityPresenter != null)
-                        _activityPresenter.ContentTemplate = ErrorTemplate;
-
                     RaiseEvent(new RoutedActivityEventArgs(ErrorEvent, activity));
 
-                    if (!activity.ShowErrors)
+                    if (!activity.ShowErrors) //remove from queue and go next
                     {
                         _activities.Remove(activity);
                     }
+
+                    UpdateActivityPresenter(activity.ShowErrors ? activity : null);
                 }
 
                 RaiseEvent(new RoutedActivityEventArgs(FinishedEvent, activity));
 
-                this.Dispatcher.Invoke(CheckAndRun);
+                this.Dispatcher.Invoke(CheckAndRun); //rerun method to process the next activity
             }
         }
     }

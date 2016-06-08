@@ -24,6 +24,11 @@ namespace ActivitySample
         public MainWindow()
         {
             InitializeComponent();
+
+            Activity.EnqueueActivity(async (t) => {
+                await Task.Delay(2000, t);
+                this.Title = "Success";
+            }, "Sleep", "Sleeping...", true, true, true, true);
         }
 
         private void Button_Click1(object sender, RoutedEventArgs e)

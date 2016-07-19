@@ -1,3 +1,5 @@
+[![zvsharp MyGet Build Status](https://www.myget.org/BuildSource/Badge/zvsharp?identifier=29fa8ab0-388a-4944-9f25-b4a3c6defa55)](https://www.myget.org/)
+
 # ActivityOverlay
 WPF activity inticator
 
